@@ -28,7 +28,6 @@
 
 " This helper function performs the meat of the work, and allows convenient
 " control flow.
-" TODO: Factor out the repetitive three-line primitives.
 function FreeDrag#DragHelper(dir)
     " Grab the topleft and bottomright corner of the visual selection
     " It is assumed that (col0,row0) is always the top left corner, even if
@@ -47,6 +46,18 @@ function FreeDrag#DragHelper(dir)
     " Note that we need to reselect the region because we exited visual mode
     " when this function was called.
     normal! gv"ay
+
+    " Only allow function in virtual block mode
+"    normal! gv
+"    let l:md = mode()
+"    " TODO: Figure out how to remove this character
+"    if l:md != ""
+"       echom "This plugin only works in Visual Block Mode"
+"       echom l:md
+"       return
+"    endif
+"    execute "normal! <esc>"
+
 
     if a:dir == "up"
         " Abort if we can't go up anymore
@@ -80,6 +91,12 @@ function FreeDrag#DragHelper(dir)
         call cursor(row1-1, col1)
 
     elseif a:dir == "down"
+        " Check for EOF, since virtualedit does not allow the cursor to go down past the
+        " end of the line.
+        if row1 == line('$')
+            call append(line('$'), '')
+        endif
+
         " Grab characters immediately below the current selection and put them
         " into register b
         call cursor(row1+1, col0)
@@ -110,7 +127,57 @@ function FreeDrag#DragHelper(dir)
            normal gv
            return
         endif
+
+        " Grab characters immediately to the left of the current selection and
+        " put them into register b
+        call cursor(row0, col0 - 1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col0 - 1)
+        normal "by
+
+        " Select the block that we are replacing and paste from register a
+        call cursor(row0, col0-1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1-1)
+        normal "ap
+
+        " Put the characters to the right of the current selection on the
+        " column that we just abandoned
+        call cursor(row0, col1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1)
+        normal "bp
+
+        " Reselect the block that was moved
+        call cursor(row0, col0-1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1-1)
+
     elseif a:dir == "right"
+        " Grab characters immediately to the right of the current selection and
+        " put them into register b
+        call cursor(row0, col1 + 1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1 + 1)
+        normal "by
+
+        " Select the block that we are replacing and paste from register a
+        call cursor(row0, col0+1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1+1)
+        normal "ap
+
+        " Put the characters to the left of the current selection on the
+        " column that we just abandoned
+        call cursor(row0, col0)
+        execute "normal! \<C-V>"
+        call cursor(row1, col0)
+        normal "bp
+
+        " Reselect the block that was moved
+        call cursor(row0, col0 + 1)
+        execute "normal! \<C-V>"
+        call cursor(row1, col1 + 1)
     endif
 endfunction
 
