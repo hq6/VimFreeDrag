@@ -47,18 +47,6 @@ function FreeDrag#DragHelper(dir)
     " when this function was called.
     normal! gv"ay
 
-    " Only allow function in virtual block mode
-"    normal! gv
-"    let l:md = mode()
-"    " TODO: Figure out how to remove this character
-"    if l:md != ""
-"       echom "This plugin only works in Visual Block Mode"
-"       echom l:md
-"       return
-"    endif
-"    execute "normal! <esc>"
-
-
     if a:dir == "up"
         " Abort if we can't go up anymore
         if row0 == 1
@@ -181,8 +169,14 @@ function FreeDrag#DragHelper(dir)
     endif
 endfunction
 
-" TODO: Exit if we are in a non-visual-block mode
 function FreeDrag#Drag(dir)
+    " Only allow function in virtual block mode
+    if visualmode() != ""
+       echom "FreeDrag only works in Visual Block Mode!"
+       normal gv
+       return
+    endif
+
     " Save the registers we will use as scratch registers
     let l:saved_a=@a
     let l:saved_b=@b
