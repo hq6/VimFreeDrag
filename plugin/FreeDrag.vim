@@ -28,6 +28,7 @@
 
 " This helper function performs the meat of the work, and allows convenient
 " control flow.
+" TODO: Factor out the repetitive three-line primitives.
 function FreeDrag#DragHelper(dir)
     " Grab the topleft and bottomright corner of the visual selection
     " It is assumed that (col0,row0) is always the top left corner, even if
@@ -50,38 +51,70 @@ function FreeDrag#DragHelper(dir)
     if a:dir == "up"
         " Abort if we can't go up anymore
         if row0 == 1
-           return 
+           " Restore the selection before aborting
+           normal gv
+           return
         endif
 
         " Grab characters immediately above the current selection and put them
         " into register b
-        call cursor(row0-1, col0) 
+        call cursor(row0-1, col0)
         execute "normal! \"by".width."l"
 
-        " Select the block that we are replacing
-        call cursor(row0-1, col0) 
+        " Select the block that we are replacing and paste from register a
+        call cursor(row0-1, col0)
         execute "normal! \<C-V>"
-        call cursor(row1-1, col1) 
+        call cursor(row1-1, col1)
         normal "ap
 
         " Put the characters above the current selection on the row that we
         " just abandoned
-        call cursor(row1, col0) 
+        call cursor(row1, col0)
         execute "normal! \<C-V>"
-        call cursor(row1, col1) 
+        call cursor(row1, col1)
         normal "bp
 
+        " Reselect the block that was moved
+        call cursor(row0-1, col0)
+        execute "normal! \<C-V>"
+        call cursor(row1-1, col1)
+
     elseif a:dir == "down"
+        " Grab characters immediately below the current selection and put them
+        " into register b
+        call cursor(row1+1, col0)
+        execute "normal! \"by".width."l"
+
+        " Select the block that we are replacing and paste from register a
+        call cursor(row0+1, col0)
+        execute "normal! \<C-V>"
+        call cursor(row1+1, col1)
+        normal "ap
+
+        " Put the characters below the current selection on the row that we
+        " just abandoned
+        call cursor(row0, col0)
+        execute "normal! \<C-V>"
+        call cursor(row0, col1)
+        normal "bp
+
+        " Reselect the block that was moved
+        call cursor(row0+1, col0)
+        execute "normal! \<C-V>"
+        call cursor(row1+1, col1)
 
     elseif a:dir == "left"
         " Abort if we can't go left anymore
         if col0 == 1
+           " Restore the selection before aborting
+           normal gv
            return
         endif
     elseif a:dir == "right"
     endif
 endfunction
 
+" TODO: Exit if we are in a non-visual-block mode
 function FreeDrag#Drag(dir)
     " Save the registers we will use as scratch registers
     let l:saved_a=@a
