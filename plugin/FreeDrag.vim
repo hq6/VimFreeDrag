@@ -171,7 +171,7 @@ endfunction
 
 function FreeDrag#Drag(dir)
     " Only allow function in virtual block mode
-    if visualmode() != ""
+    if visualmode() != "\<C-V>"
        echom "FreeDrag only works in Visual Block Mode!"
        normal gv
        return
