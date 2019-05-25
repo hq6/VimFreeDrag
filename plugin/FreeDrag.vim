@@ -220,6 +220,12 @@ function FreeDrag#DragHelper(dir)
     if isDollarBlock
         normal $
     endif
+
+    " Remove trailing whitespace
+	for l:linenum in range(row0-1, row1+1)
+		call setline(l:linenum, substitute(getline(l:linenum), "\\s\\+$", '', ''))
+	endfor
+
 endfunction
 
 function FreeDrag#Drag(dir)
