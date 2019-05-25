@@ -25,6 +25,37 @@
 "        was moved, and paste from register b.
 "     9. Restore registers a and b.
 
+" Takes the contents of a visual selection as an argument and determines
+" whether it is rectangular by checking if each row contains the same number
+" of columns.
+function s:isDollarBlock(block)
+ let l:len = -1
+ for x in split(a:block, "\n")
+    " echom x."ending"
+    " echom strlen(x)
+    if l:len == -1
+       let l:len = strlen(x)
+    endif
+    if l:len != strlen(x)
+       return 1
+    endif
+ endfor
+ return 0
+endfunction
+
+" Finds the rightmost column among the lines from row0 to row1
+function s:getRightMostColumn(row0, row1)
+  let row = a:row0
+  let rightMostColumn = 0
+  while row <= a:row1
+     let rowLength = strlen(getline(row))
+     if rowLength > rightMostColumn
+        let rightMostColumn = rowLength
+     endif
+     let row+=1
+  endwhile
+  return rightMostColumn
+endfunction
 
 " This helper function performs the meat of the work, and allows convenient
 " control flow.
@@ -37,15 +68,29 @@ function FreeDrag#DragHelper(dir)
 	let row0   = line("'<")
 	let col1   = virtcol("'>")
 	let row1   = line("'>")
-    let width=col1-col0+1
-    let height=row1-row0+1
 
 	" echom col0 row0 col1 row1
 
     " Yank the contents into register a
     " Note that we need to reselect the region because we exited visual mode
     " when this function was called.
-    normal! gv"ay
+    silent normal! gv"ay
+
+    " If the region is non-rectangular, then compute col1 as the rightmost
+    " column using the longest line in the selected region
+    let isDollarBlock = s:isDollarBlock(@a)
+    if isDollarBlock
+        let col1 = s:getRightMostColumn(row0,row1)
+    endif
+    echom col1
+
+    " This is set after the IsDollarBlock check because otherwise register a
+    " contains padded lines, making it impossible to non-rectangular regions
+    " by counting lines.
+    set virtualedit=all
+
+    let width=col1-col0+1
+    let height=row1-row0+1
 
     if a:dir == "up"
         " Abort if we can't go up anymore
@@ -64,14 +109,14 @@ function FreeDrag#DragHelper(dir)
         call cursor(row0-1, col0)
         execute "normal! \<C-V>"
         call cursor(row1-1, col1)
-        normal "ap
+        normal! "ap
 
         " Put the characters above the current selection on the row that we
         " just abandoned
         call cursor(row1, col0)
         execute "normal! \<C-V>"
         call cursor(row1, col1)
-        normal "bp
+        normal! "bp
 
         " Reselect the block that was moved
         call cursor(row0-1, col0)
@@ -167,6 +212,14 @@ function FreeDrag#DragHelper(dir)
         execute "normal! \<C-V>"
         call cursor(row1, col1 + 1)
     endif
+
+    " Restore dollar selection if that was in place before.
+    " Without special case for isDollarBlock, then we lose the protruding part
+    " of the dollar selection if virtualedit was not originally unabled by the
+    " user.
+    if isDollarBlock
+        normal $
+    endif
 endfunction
 
 function FreeDrag#Drag(dir)
@@ -183,7 +236,6 @@ function FreeDrag#Drag(dir)
 
     " Save the setting of virtualedit so that we can restore it after we're done
     let l:saved_virtualedit=&virtualedit
-    set virtualedit=all
 
     " Doing the bulk of the work in a different function helps us make sure
     " cleanup happens even if the function fails.
