@@ -57,6 +57,15 @@ function s:getRightMostColumn(row0, row1)
   return rightMostColumn
 endfunction
 
+" Select a rectangular block assuming virtualedit=all.
+" (row0, col0) is assumed to be the top-left corner.
+" (row1, col1) is assumed to be the bottom-right corner.
+function s:selectRectangularBlock(row0, col0, row1, col1)
+    call cursor(a:row0, a:col0)
+    execute "normal! \<C-V>"
+    call cursor(a:row1, a:col1)
+endfunction
+
 " This helper function performs the meat of the work, and allows convenient
 " control flow.
 function FreeDrag#DragHelper(dir)
@@ -84,7 +93,7 @@ function FreeDrag#DragHelper(dir)
     endif
     echom col1
 
-    " This is set after the IsDollarBlock check because otherwise register a
+    " This is set after the isDollarBlock check because otherwise register a
     " contains padded lines, making it impossible to non-rectangular regions
     " by counting lines.
     set virtualedit=all
@@ -106,22 +115,16 @@ function FreeDrag#DragHelper(dir)
         execute "normal! \"by".width."l"
 
         " Select the block that we are replacing and paste from register a
-        call cursor(row0-1, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1-1, col1)
+        call s:selectRectangularBlock(row0-1, col0, row1-1, col1)
         normal! "ap
 
         " Put the characters above the current selection on the row that we
         " just abandoned
-        call cursor(row1, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1)
+        call s:selectRectangularBlock(row1, col0, row1, col1)
         normal! "bp
 
         " Reselect the block that was moved
-        call cursor(row0-1, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1-1, col1)
+        call s:selectRectangularBlock(row0-1, col0, row1-1, col1)
 
     elseif a:dir == "down"
         " Check for EOF, since virtualedit does not allow the cursor to go down past the
@@ -136,22 +139,16 @@ function FreeDrag#DragHelper(dir)
         execute "normal! \"by".width."l"
 
         " Select the block that we are replacing and paste from register a
-        call cursor(row0+1, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1+1, col1)
+        call s:selectRectangularBlock(row0+1, col0, row1+1, col1)
         normal "ap
 
         " Put the characters below the current selection on the row that we
         " just abandoned
-        call cursor(row0, col0)
-        execute "normal! \<C-V>"
-        call cursor(row0, col1)
+        call s:selectRectangularBlock(row0, col0, row0, col1)
         normal "bp
 
         " Reselect the block that was moved
-        call cursor(row0+1, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1+1, col1)
+        call s:selectRectangularBlock(row0+1, col0, row1+1, col1)
 
     elseif a:dir == "left"
         " Abort if we can't go left anymore
@@ -163,54 +160,38 @@ function FreeDrag#DragHelper(dir)
 
         " Grab characters immediately to the left of the current selection and
         " put them into register b
-        call cursor(row0, col0 - 1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col0 - 1)
+        call s:selectRectangularBlock(row0, col0 - 1, row1, col0 - 1)
         normal "by
 
         " Select the block that we are replacing and paste from register a
-        call cursor(row0, col0-1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1-1)
+        call s:selectRectangularBlock(row0, col0-1, row1, col1-1)
         normal "ap
 
         " Put the characters to the right of the current selection on the
         " column that we just abandoned
-        call cursor(row0, col1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1)
+        call s:selectRectangularBlock(row0, col1, row1, col1)
         normal "bp
 
         " Reselect the block that was moved
-        call cursor(row0, col0-1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1-1)
+        call s:selectRectangularBlock(row0, col0-1, row1, col1-1)
 
     elseif a:dir == "right"
         " Grab characters immediately to the right of the current selection and
         " put them into register b
-        call cursor(row0, col1 + 1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1 + 1)
+        call s:selectRectangularBlock(row0, col1 + 1, row1, col1 + 1)
         normal "by
 
         " Select the block that we are replacing and paste from register a
-        call cursor(row0, col0+1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1+1)
+        call s:selectRectangularBlock(row0, col0+1, row1, col1+1)
         normal "ap
 
         " Put the characters to the left of the current selection on the
         " column that we just abandoned
-        call cursor(row0, col0)
-        execute "normal! \<C-V>"
-        call cursor(row1, col0)
+        call s:selectRectangularBlock(row0, col0, row1, col0)
         normal "bp
 
         " Reselect the block that was moved
-        call cursor(row0, col0 + 1)
-        execute "normal! \<C-V>"
-        call cursor(row1, col1 + 1)
+        call s:selectRectangularBlock(row0, col0+1, row1, col1+1)
     endif
 
     " Restore dollar selection if that was in place before.
