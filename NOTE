@@ -1,0 +1,23 @@
+Currently the visual drag fails if the region is ragged, due to C-vjj$ on
+something like the following string. 
+
+1 1 1 1 1 1 1 1
+1 2 1 1 1 1 1 1
+1 3 1 1 1 1 1 1
+1 4 1 1 1 1 1 1 1 1
+1 1 1 1 7 1 1 1
+
+A user can work around this limitation by doing a manual reselection after turning on
+virtualedit so that they select a full rectangle. However it doesn't make sense
+to require the user do that and it would be a better experience if we could
+find the real right corner instead.
+
+A more signficant bug / limitation is that selections starting from the
+top-right corner do not work correctly.  It is likely that the easiest way to
+fix this is to programmatically change the selection to be from the top-left
+corner, but that might make the user experience a little awkward. It would be
+good to preserve the original marks after re-selection. Thus, it likely makes
+sense to track both the original coordinates and the top-left and bottom-right
+corners. Use the original coordinates for re-selection, but use the top-right
+and bottom-left for figuring out which row or column to copy where when
+something is displaced.
