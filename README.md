@@ -53,6 +53,14 @@ Moving this block Right:
 9210
 ```
 
+## Installation
+
+Simply clone this plugin into the plugin directory that is read by Vim8.
+
+```
+pushd  ~/.vim/pack/plugins/start
+git clone https://github.com/hq6/VimFreeDrag.git
+```
 
 ## Limitations
  * Works only with in Visual Block mode. It will detect and reject other visual
