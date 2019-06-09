@@ -1,10 +1,10 @@
 # Vim Free Drag
 
 This plugin enables the movement of *rectangular blocks* of text, selected
-using Vim's *visual block mode*. It has undefined behavior 
-
-This plugin is meant to be used in conjunction with a drawing plugin such as
-DrawIt, but it has no dependencies.
+using Vim's *visual block mode*.
+It was inspired by running this [this issue](https://github.com/zirrostig/vim-schlepp/issues/12#issuecomment-496709494)
+with a similar plugin [vim-schlepp](https://github.com/zirrostig/vim-schlepp),
+which was an adaptation of DragVisuals.vim.
 
 ## Movement Model
 
