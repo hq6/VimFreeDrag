@@ -2,7 +2,7 @@
 
 This plugin enables the movement of *rectangular blocks* of text, selected
 using Vim's *visual block mode*.
-It was inspired by running this [this issue](https://github.com/zirrostig/vim-schlepp/issues/12#issuecomment-496709494)
+It was inspired by running into [this issue](https://github.com/zirrostig/vim-schlepp/issues/12#issuecomment-496709494)
 with a similar plugin [vim-schlepp](https://github.com/zirrostig/vim-schlepp),
 which was an adaptation of DragVisuals.vim.
 
