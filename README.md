@@ -73,7 +73,21 @@ vmap <unique> L  <Plug>FreeDragRight
 ```
 
 Please create issues if you find scenarios where it does not work as expected
-that are not described in the limitations below.
+that are not described in the limitations section.
+
+## Background
+
+While creating ASCII art for architecture diagrams, I realized that I needed to
+be able to drag entire blocks around relatively independently of surrounding
+text. I remembered listening to a
+[talk](https://www.youtube.com/watch?v=aHm36-na4-4) by Damian Conway where he
+discussed a plugin called DragVisuals.vim. Searching around the web found
+various versions that were rather buggy. Eventually, I found
+[vim-schlepp](https://github.com/zirrostig/vim-schlepp), which seemed to be the
+spiritual sucessor to DragVisuals.vim. Unfortunately, that plugin behaved one
+way when moving text up and down, and a different way when moving text left and
+right. This clashed with my mental model for how dragging text should work;
+hence the creation of this plugin.
 
 ## Limitations
  * Works only with in Visual Block mode. It will detect and reject other visual
