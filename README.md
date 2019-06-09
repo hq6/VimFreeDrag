@@ -62,6 +62,19 @@ pushd  ~/.vim/pack/plugins/start
 git clone https://github.com/hq6/VimFreeDrag.git
 ```
 
+To actually use it, create mappings in your `~/.vimrc` for each direction of
+dragging.
+
+```
+vmap <unique> K  <Plug>FreeDragUp
+vmap <unique> J  <Plug>FreeDragDown
+vmap <unique> H  <Plug>FreeDragLeft
+vmap <unique> L  <Plug>FreeDragRight
+```
+
+Please create issues if you find scenarios where it does not work as expected
+that are not described in the limitations below.
+
 ## Limitations
  * Works only with in Visual Block mode. It will detect and reject other visual
    modes.
