@@ -38,14 +38,20 @@ endfunction
 " This helper function performs the meat of the work, and allows convenient
 " control flow.
 function FreeDrag#DragHelper(dir)
-    " Grab the topleft and bottomright corner of the visual selection
-    " It is assumed that (col0,row0) is always the top left corner, even if
-    " the selection is performed from bottom right towards the top left. This
-    " seems to be true empirically.
+    " Grab two diagonally opposite corners of the visual selection
+    " Note that these will be different corners depending on which direction
+    " the selection was performed in.
 	let col0   = virtcol("'<")
 	let row0   = line("'<")
 	let col1   = virtcol("'>")
 	let row1   = line("'>")
+
+    " Compute the topleft and bottomright corner of the visual selection
+    " These are used for computing the row or column that is being displaced.
+    let left = min([col0, col1])
+    let right = max([col0, col1])
+    let top = min([row0, row1])
+    let bottom =  max([row0, row1])
 
 	" echom col0 row0 col1 row1
 
@@ -56,12 +62,12 @@ function FreeDrag#DragHelper(dir)
 
     set virtualedit=all
 
-    let width=col1-col0+1
-    let height=row1-row0+1
+    let width=right-left+1
+    let height=bottom-top+1
 
     if a:dir == "up"
         " Abort if we can't go up anymore
-        if row0 == 1
+        if top == 1
            " Restore the selection before aborting
            normal gv
            return
@@ -69,16 +75,16 @@ function FreeDrag#DragHelper(dir)
 
         " Grab characters immediately above the current selection and put them
         " into register b
-        call cursor(row0-1, col0)
+        call cursor(top-1, left)
         execute "normal! \"by".width."l"
 
         " Select the block that we are replacing and paste from register a
-        call s:selectRectangularBlock(row0-1, col0, row1-1, col1)
+        call s:selectRectangularBlock(top-1, left, bottom-1, right)
         normal! "ap
 
         " Put the characters above the current selection on the row that we
         " just abandoned
-        call s:selectRectangularBlock(row1, col0, row1, col1)
+        call s:selectRectangularBlock(bottom, left, bottom, right)
         normal! "bp
 
         " Reselect the block that was moved
@@ -87,22 +93,22 @@ function FreeDrag#DragHelper(dir)
     elseif a:dir == "down"
         " Check for EOF, since virtualedit does not allow the cursor to go down past the
         " end of the line.
-        if row1 == line('$')
+        if bottom == line('$')
             call append(line('$'), '')
         endif
 
         " Grab characters immediately below the current selection and put them
         " into register b
-        call cursor(row1+1, col0)
+        call cursor(bottom+1, left)
         execute "normal! \"by".width."l"
 
         " Select the block that we are replacing and paste from register a
-        call s:selectRectangularBlock(row0+1, col0, row1+1, col1)
+        call s:selectRectangularBlock(top+1, left, bottom+1, right)
         normal "ap
 
         " Put the characters below the current selection on the row that we
         " just abandoned
-        call s:selectRectangularBlock(row0, col0, row0, col1)
+        call s:selectRectangularBlock(top, left, top, right)
         normal "bp
 
         " Reselect the block that was moved
@@ -110,7 +116,7 @@ function FreeDrag#DragHelper(dir)
 
     elseif a:dir == "left"
         " Abort if we can't go left anymore
-        if col0 == 1
+        if left == 1
            " Restore the selection before aborting
            normal gv
            return
@@ -118,16 +124,16 @@ function FreeDrag#DragHelper(dir)
 
         " Grab characters immediately to the left of the current selection and
         " put them into register b
-        call s:selectRectangularBlock(row0, col0 - 1, row1, col0 - 1)
+        call s:selectRectangularBlock(top, left - 1, bottom, left - 1)
         normal "by
 
         " Select the block that we are replacing and paste from register a
-        call s:selectRectangularBlock(row0, col0-1, row1, col1-1)
+        call s:selectRectangularBlock(top, left-1, bottom, right-1)
         normal "ap
 
         " Put the characters to the right of the current selection on the
         " column that we just abandoned
-        call s:selectRectangularBlock(row0, col1, row1, col1)
+        call s:selectRectangularBlock(top, right, bottom, right)
         normal "bp
 
         " Reselect the block that was moved
@@ -136,16 +142,16 @@ function FreeDrag#DragHelper(dir)
     elseif a:dir == "right"
         " Grab characters immediately to the right of the current selection and
         " put them into register b
-        call s:selectRectangularBlock(row0, col1 + 1, row1, col1 + 1)
+        call s:selectRectangularBlock(top, right + 1, bottom, right + 1)
         normal "by
 
         " Select the block that we are replacing and paste from register a
-        call s:selectRectangularBlock(row0, col0+1, row1, col1+1)
+        call s:selectRectangularBlock(top, left+1, bottom, right+1)
         normal "ap
 
         " Put the characters to the left of the current selection on the
         " column that we just abandoned
-        call s:selectRectangularBlock(row0, col0, row1, col0)
+        call s:selectRectangularBlock(top, left, bottom, left)
         normal "bp
 
         " Reselect the block that was moved
@@ -153,7 +159,7 @@ function FreeDrag#DragHelper(dir)
     endif
 
     " Remove trailing whitespace
-	for l:linenum in range(row0-1, row1+1)
+	for l:linenum in range(top-1, bottom+1)
 		call setline(l:linenum, substitute(getline(l:linenum), "\\s\\+$", '', ''))
 	endfor
 
